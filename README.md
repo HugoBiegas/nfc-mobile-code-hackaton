@@ -1,5 +1,3 @@
-Voici une version mise à jour du fichier README, en tenant compte de la fonction de vérification d'identité.
-
 # Projet Android - Validation NFC avec Application Web
 
 Ce projet Android est conçu pour fonctionner de paire avec une application web. Son but est de vérifier l'identité d'une personne en validant un code généré par l'application web, puis en scannant un tag NFC. Toutes les vérifications sont effectuées via une API pour s'assurer que le tag NFC est valide et correspond à une personne habilitée.
@@ -49,15 +47,3 @@ Ce projet Android est conçu pour fonctionner de paire avec une application web.
 2. Entrez le code généré par l'application web dans le champ prévu et appuyez sur le bouton "Validate".
 3. Si le code est valide, accédez à l'écran de scan NFC et approchez un tag NFC compatible de l'appareil.
 4. Une popup s'affichera pour indiquer si le tag NFC est accepté ou refusé.
-
-## Contributions
-
-Les contributions sont les bienvenues ! Veuillez soumettre une pull request pour toute amélioration ou correction.
-
-## Licence
-
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
-
----
-
-N'hésitez pas à adapter ce README selon les spécificités de votre projet et vos besoins.
