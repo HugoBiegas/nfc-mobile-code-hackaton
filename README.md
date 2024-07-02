@@ -1,20 +1,23 @@
-Voici un exemple de fichier README pour votre projet Android Studio :
+Voici une version mise à jour du fichier README, en tenant compte de la fonction de vérification d'identité.
 
-# Projet Android - Validation NFC
+# Projet Android - Validation NFC avec Application Web
 
-Ce projet Android permet de valider un code et de scanner des tags NFC. Il utilise Kotlin pour le développement backend et XML pour la définition des interfaces utilisateur.
+Ce projet Android est conçu pour fonctionner de paire avec une application web. Son but est de vérifier l'identité d'une personne en validant un code généré par l'application web, puis en scannant un tag NFC. Toutes les vérifications sont effectuées via une API pour s'assurer que le tag NFC est valide et correspond à une personne habilitée.
 
 ## Fonctionnalités
 
-1. **Validation de code** : Saisie d'un code et validation via un bouton.
-2. **Scan NFC** : Lecture des données NFC avec une interface utilisateur simple.
+1. **Validation de code** : Saisie d'un code généré par l'application web et validation via une API.
+2. **Scan NFC** : Lecture des données NFC après validation du code.
+3. **Vérification d'identité** : Confirmation que le tag NFC correspond bien à une personne habilitée.
+4. **Popup de validation** : Affichage d'une popup indiquant si le scan NFC est accepté ou refusé.
+5. **Communication API** : Envoi des résultats de validation (code et NFC) à l'API pour validation ou refus de la connexion en fonction du token.
 
 ## Structure du projet
 
 ### Fichiers principaux
 
-- **MainActivity.kt** : Gestion de l'activité principale, y compris la validation du code.
-- **NfcScanActivity.kt** : Gestion de l'activité de scan NFC.
+- **MainActivity.kt** : Gère l'activité principale, y compris la validation du code.
+- **NfcScanActivity.kt** : Gère l'activité de scan NFC.
 - **ApiService.kt** : Service pour les appels API.
 - **JwtResponse.kt** : Modèle de réponse pour le JWT.
 - **ValidationResponse.kt** : Modèle de réponse pour la validation.
@@ -34,7 +37,7 @@ Ce projet Android permet de valider un code et de scanner des tags NFC. Il utili
 
 1. Clonez le dépôt.
    ```bash
-   git clone [<URL_DU_DEPOT>](https://github.com/HugoBiegas/nfc-mobile-code-hackaton.git)
+   git clone https://github.com/HugoBiegas/nfc-mobile-code-hackaton.git
    ```
 2. Ouvrez le projet avec Android Studio.
 3. Synchronisez les dépendances du projet.
@@ -43,8 +46,9 @@ Ce projet Android permet de valider un code et de scanner des tags NFC. Il utili
 ## Utilisation
 
 1. Lancez l'application.
-2. Pour valider un code, entrez le code dans le champ prévu et appuyez sur le bouton "Validate".
-3. Pour scanner un tag NFC, accédez à l'écran de scan NFC et approchez un tag NFC compatible de l'appareil.
+2. Entrez le code généré par l'application web dans le champ prévu et appuyez sur le bouton "Validate".
+3. Si le code est valide, accédez à l'écran de scan NFC et approchez un tag NFC compatible de l'appareil.
+4. Une popup s'affichera pour indiquer si le tag NFC est accepté ou refusé.
 
 ## Contributions
 
