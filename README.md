@@ -34,7 +34,7 @@ Ce projet Android permet de valider un code et de scanner des tags NFC. Il utili
 
 1. Clonez le dépôt.
    ```bash
-   git clone <URL_DU_DEPOT>
+   git clone [<URL_DU_DEPOT>](https://github.com/HugoBiegas/nfc-mobile-code-hackaton.git)
    ```
 2. Ouvrez le projet avec Android Studio.
 3. Synchronisez les dépendances du projet.
