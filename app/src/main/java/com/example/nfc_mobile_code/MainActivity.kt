@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity() {
 
         // Initialize Retrofit
         val retrofit = Retrofit.Builder()
-            .baseUrl("https://api.yourservice.com/") // Remplacez par l'URL de votre serveur Node.js
+            .baseUrl("https://api.yourservice.com/") // api Node.js
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         apiService = retrofit.create(ApiService::class.java)

@@ -44,7 +44,7 @@ class NfcScanActivity : AppCompatActivity() {
 
         // Initialisation de Retrofit
         val retrofit = Retrofit.Builder()
-            .baseUrl("https://api.yourservice.com/") // Remplacez par l'URL de votre serveur
+            .baseUrl("https://api.yourservice.com/") // api Node.js
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         apiService = retrofit.create(ApiService::class.java)
@@ -140,7 +140,7 @@ class NfcScanActivity : AppCompatActivity() {
                 Log.e("NfcScanActivity", "API call failed", t)
                 runOnUiThread {
                     showSuccessDialog()
-                    // Affiche un message d'erreur (décommenter si nécessaire)
+                    // Affiche un message d'erreur
                     //Toast.makeText(this@NfcScanActivity, "Failed to send token", Toast.LENGTH_SHORT).show()
                 }
             }
