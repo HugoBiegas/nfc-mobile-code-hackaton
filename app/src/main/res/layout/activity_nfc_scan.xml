@@ -5,7 +5,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    tools:context=".NfcScanActivity">
+    tools:context=".NfcScanActivity"
+    android:background="@drawable/background_nfc_app">
 
     <TextView
         android:id="@+id/nfc_data_text"

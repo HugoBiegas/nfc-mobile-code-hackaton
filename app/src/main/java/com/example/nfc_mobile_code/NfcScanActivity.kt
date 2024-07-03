@@ -210,7 +210,7 @@ class NfcScanActivity : AppCompatActivity() {
 
     private fun redirectToWebsite(token: String) {
         val ip = getString(R.string.ip_resaux)
-        val url = "http://$ip:3000/mobileConnection/$token"
+        val url = "http://$ip:3000/mobile-auth/$token"
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         startActivity(intent)
         finish()
