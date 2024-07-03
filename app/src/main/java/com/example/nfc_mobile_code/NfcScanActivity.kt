@@ -11,13 +11,14 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.example.nfc_mobile_code.classapiservice.JwtResponse
+import com.example.nfc_mobile_code.classapiservice.TokenRequest
+import com.example.nfc_mobile_code.classapiservice.SessionCloseRequest
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import com.example.nfc_mobile_code.classapiservice.JwtResponse
-import com.example.nfc_mobile_code.classapiservice.TokenRequest
 
 class NfcScanActivity : AppCompatActivity() {
 
@@ -25,6 +26,8 @@ class NfcScanActivity : AppCompatActivity() {
     private lateinit var nfcDataText: TextView
     private lateinit var apiService: ApiService
     private var code: String? = null
+    private var attemptCount = 0
+    private val maxAttempts = 3
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -149,9 +152,7 @@ class NfcScanActivity : AppCompatActivity() {
             override fun onFailure(call: Call<JwtResponse>, t: Throwable) {
                 Log.e("NfcScanActivity", "API call failed", t)
                 runOnUiThread {
-                    showSuccessDialog()
-                    // Affiche un message d'erreur
-                    Toast.makeText(this@NfcScanActivity, "Failed to send token", Toast.LENGTH_SHORT).show()
+                    showError()
                 }
             }
 
@@ -165,17 +166,64 @@ class NfcScanActivity : AppCompatActivity() {
                     } else {
                         Log.e("NfcScanActivity", "API call unsuccessful: ${response.message()}")
                         runOnUiThread {
-                            Toast.makeText(this@NfcScanActivity, "Failed to send token", Toast.LENGTH_SHORT).show()
+                            showError()
                         }
                     }
                 } else {
                     Log.e("NfcScanActivity", "API call unsuccessful: ${response.message()}")
                     runOnUiThread {
-                        Toast.makeText(this@NfcScanActivity, "Failed to send token", Toast.LENGTH_SHORT).show()
+                        showError()
                     }
                 }
             }
         })
+    }
+
+    private fun showError() {
+        attemptCount++
+        if (attemptCount >= maxAttempts) {
+            // Send request to close session
+            closeSession()
+        } else {
+            // Show error message
+            Toast.makeText(this, "Veuillez scanner un NFC valide. Tentative $attemptCount de $maxAttempts.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun closeSession() {
+        if (code != null) {
+            val sessionCloseRequest = SessionCloseRequest(code!!)
+            val call = apiService.closeSession(sessionCloseRequest)
+            call.enqueue(object : Callback<Void> {
+                override fun onFailure(call: Call<Void>, t: Throwable) {
+                    Log.e("NfcScanActivity", "API call failed to close session", t)
+                    runOnUiThread {
+                        returnToHome()
+                    }
+                }
+
+                override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                    if (response.isSuccessful) {
+                        Log.d("NfcScanActivity", "Session closed successfully")
+                    } else {
+                        Log.e("NfcScanActivity", "Failed to close session: ${response.message()}")
+                    }
+                    runOnUiThread {
+                        returnToHome()
+                    }
+                }
+            })
+        } else {
+            Log.e("NfcScanActivity", "No code found to close session")
+            returnToHome()
+        }
+    }
+
+    private fun returnToHome() {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 
     private fun showSuccessDialog() {
@@ -184,10 +232,7 @@ class NfcScanActivity : AppCompatActivity() {
             .setTitle("Success")
             .setMessage("Token sent successfully!")
             .setPositiveButton("OK") { _, _ ->
-                val intent = Intent(this, MainActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
-                finish()
+                returnToHome()
             }
             .show()
     }
