@@ -24,6 +24,7 @@ class NfcScanActivity : AppCompatActivity() {
     private lateinit var nfcAdapter: NfcAdapter
     private lateinit var nfcDataText: TextView
     private lateinit var apiService: ApiService
+    private var code: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,13 +45,17 @@ class NfcScanActivity : AppCompatActivity() {
 
         // Initialisation de Retrofit
         val retrofit = Retrofit.Builder()
-            .baseUrl("https://api.yourservice.com/") // api Node.js
+            .baseUrl("http://172.20.10.6:5000/") // api Node.js
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         apiService = retrofit.create(ApiService::class.java)
 
         // Traite l'intent reçu
         handleIntent(intent)
+
+        // Récupérer le code transmis depuis l'intent
+        code = intent.getStringExtra("EXTRA_CODE")
+        nfcDataText.text = "Code: $code\nScan your NFC"
     }
 
     override fun onResume() {
@@ -96,8 +101,12 @@ class NfcScanActivity : AppCompatActivity() {
                 // Lit les données du tag NFC
                 val jwtToken = readNfcTag(ndef)
                 Log.d("NfcScanActivity", "Data read from NFC: $jwtToken")
-                // Envoie le jeton à l'API
-                sendTokenToApi(jwtToken)
+                // Envoie le jeton à l'API avec le code
+                if (code != null) {
+                    sendTokenToApi(code!!, jwtToken)
+                } else {
+                    Log.e("NfcScanActivity", "No code found in intent")
+                }
             } catch (e: Exception) {
                 Log.e("NfcScanActivity", "Error reading NFC tag", e)
                 runOnUiThread {
@@ -133,22 +142,31 @@ class NfcScanActivity : AppCompatActivity() {
         return stringBuilder.toString().trim()
     }
 
-    private fun sendTokenToApi(token: String) {
-        val call = apiService.sendToken(token)
+    private fun sendTokenToApi(code: String, token: String) {
+        val tokenRequest = TokenRequest(code, token)
+        val call = apiService.sendToken(tokenRequest)
         call.enqueue(object : Callback<JwtResponse> {
             override fun onFailure(call: Call<JwtResponse>, t: Throwable) {
                 Log.e("NfcScanActivity", "API call failed", t)
                 runOnUiThread {
                     showSuccessDialog()
                     // Affiche un message d'erreur
-                    //Toast.makeText(this@NfcScanActivity, "Failed to send token", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@NfcScanActivity, "Failed to send token", Toast.LENGTH_SHORT).show()
                 }
             }
 
             override fun onResponse(call: Call<JwtResponse>, response: Response<JwtResponse>) {
                 if (response.isSuccessful) {
-                    runOnUiThread {
-                        showSuccessDialog()
+                    val jwtResponse = response.body()
+                    if (jwtResponse?.authenticated == true) {
+                        runOnUiThread {
+                            showSuccessDialog()
+                        }
+                    } else {
+                        Log.e("NfcScanActivity", "API call unsuccessful: ${response.message()}")
+                        runOnUiThread {
+                            Toast.makeText(this@NfcScanActivity, "Failed to send token", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 } else {
                     Log.e("NfcScanActivity", "API call unsuccessful: ${response.message()}")
