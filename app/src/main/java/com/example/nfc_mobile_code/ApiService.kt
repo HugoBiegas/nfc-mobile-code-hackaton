@@ -3,6 +3,10 @@ package com.example.nfc_mobile_code
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.POST
+import com.example.nfc_mobile_code.classapiservice.CodeRequest
+import com.example.nfc_mobile_code.classapiservice.JwtResponse
+import com.example.nfc_mobile_code.classapiservice.TokenRequest
+import com.example.nfc_mobile_code.classapiservice.ValidationResponse
 
 interface ApiService {
 

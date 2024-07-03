@@ -1,6 +1,5 @@
 package com.example.nfc_mobile_code
 
-import android.app.PendingIntent
 import android.content.Intent
 import android.nfc.NdefMessage
 import android.nfc.NfcAdapter
@@ -17,7 +16,8 @@ import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.io.IOException
+import com.example.nfc_mobile_code.classapiservice.JwtResponse
+import com.example.nfc_mobile_code.classapiservice.TokenRequest
 
 class NfcScanActivity : AppCompatActivity() {
 
