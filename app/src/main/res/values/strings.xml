@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">NFC Wallet</string>
+    <string name="ip_resaux">172.20.10.6</string>
+
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>

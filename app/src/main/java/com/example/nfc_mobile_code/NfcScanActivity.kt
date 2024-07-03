@@ -1,6 +1,7 @@
 package com.example.nfc_mobile_code
 
 import android.content.Intent
+import android.net.Uri
 import android.nfc.NdefMessage
 import android.nfc.NfcAdapter
 import android.nfc.Tag
@@ -11,20 +12,20 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.example.nfc_mobile_code.classapiservice.JwtResponse
-import com.example.nfc_mobile_code.classapiservice.TokenRequest
-import com.example.nfc_mobile_code.classapiservice.SessionCloseRequest
+import com.example.nfc_mobile_code.retrofit.model.JwtResponse
+import com.example.nfc_mobile_code.retrofit.model.JwtResponseNoCode
+import com.example.nfc_mobile_code.retrofit.model.TokenRequest
+import com.example.nfc_mobile_code.retrofit.model.TokenRequestInstant
+import com.example.nfc_mobile_code.retrofit.model.SessionCloseRequest
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import com.example.nfc_mobile_code.util.ApiServiceUtil
 
 class NfcScanActivity : AppCompatActivity() {
 
     private lateinit var nfcAdapter: NfcAdapter
     private lateinit var nfcDataText: TextView
-    private lateinit var apiService: ApiService
     private var code: String? = null
     private var attemptCount = 0
     private val maxAttempts = 3
@@ -45,20 +46,14 @@ class NfcScanActivity : AppCompatActivity() {
             Toast.makeText(this, "NFC is disabled.", Toast.LENGTH_SHORT).show()
             finish()
         }
-
-        // Initialisation de Retrofit
-        val retrofit = Retrofit.Builder()
-            .baseUrl("http://172.20.10.6:5000/") // api Node.js
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-        apiService = retrofit.create(ApiService::class.java)
-
         // Traite l'intent reçu
         handleIntent(intent)
 
         // Récupérer le code transmis depuis l'intent
         code = intent.getStringExtra("EXTRA_CODE")
-        nfcDataText.text = "Code: $code\nScan your NFC"
+        if (code != null) {
+            nfcDataText.text = "Code: $code\nScan your NFC"
+        }
     }
 
     override fun onResume() {
@@ -104,11 +99,11 @@ class NfcScanActivity : AppCompatActivity() {
                 // Lit les données du tag NFC
                 val jwtToken = readNfcTag(ndef)
                 Log.d("NfcScanActivity", "Data read from NFC: $jwtToken")
-                // Envoie le jeton à l'API avec le code
+                // Envoie le jeton à l'API avec le code ou envoie directement sans code
                 if (code != null) {
                     sendTokenToApi(code!!, jwtToken)
                 } else {
-                    Log.e("NfcScanActivity", "No code found in intent")
+                    sendTokenWithoutCode(jwtToken)
                 }
             } catch (e: Exception) {
                 Log.e("NfcScanActivity", "Error reading NFC tag", e)
@@ -146,6 +141,7 @@ class NfcScanActivity : AppCompatActivity() {
     }
 
     private fun sendTokenToApi(code: String, token: String) {
+        val apiService = ApiServiceUtil.getApiService(this)
         val tokenRequest = TokenRequest(code, token)
         val call = apiService.sendToken(tokenRequest)
         call.enqueue(object : Callback<JwtResponse> {
@@ -160,8 +156,41 @@ class NfcScanActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val jwtResponse = response.body()
                     if (jwtResponse?.authenticated == true) {
+                        showSuccessDialog()
+                    } else {
+                        Log.e("NfcScanActivity", "API call unsuccessful: ${response.message()}")
                         runOnUiThread {
-                            showSuccessDialog()
+                            showError()
+                        }
+                    }
+                } else {
+                    Log.e("NfcScanActivity", "API call unsuccessful: ${response.message()}")
+                    runOnUiThread {
+                        showError()
+                    }
+                }
+            }
+        })
+    }
+
+    private fun sendTokenWithoutCode(token: String) {
+        val apiService = ApiServiceUtil.getApiService(this)
+        val tokenRequestInstant = TokenRequestInstant(token)
+        val call = apiService.validateSansCode(tokenRequestInstant)
+        call.enqueue(object : Callback<JwtResponseNoCode> {
+            override fun onFailure(call: Call<JwtResponseNoCode>, t: Throwable) {
+                Log.e("NfcScanActivity", "API call failed", t)
+                runOnUiThread {
+                    showError()
+                }
+            }
+
+            override fun onResponse(call: Call<JwtResponseNoCode>, response: Response<JwtResponseNoCode>) {
+                if (response.isSuccessful) {
+                    val jwtResponse = response.body()
+                    if (jwtResponse?.authenticated == true) {
+                        runOnUiThread {
+                            redirectToWebsite(jwtResponse.token)
                         }
                     } else {
                         Log.e("NfcScanActivity", "API call unsuccessful: ${response.message()}")
@@ -179,6 +208,14 @@ class NfcScanActivity : AppCompatActivity() {
         })
     }
 
+    private fun redirectToWebsite(token: String) {
+        val ip = getString(R.string.ip_resaux)
+        val url = "http://$ip:3000/mobileConnection/$token"
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        startActivity(intent)
+        finish()
+    }
+
     private fun showError() {
         attemptCount++
         if (attemptCount >= maxAttempts) {
@@ -191,6 +228,8 @@ class NfcScanActivity : AppCompatActivity() {
     }
 
     private fun closeSession() {
+        val apiService = ApiServiceUtil.getApiService(this)
+
         if (code != null) {
             val sessionCloseRequest = SessionCloseRequest(code!!)
             val call = apiService.closeSession(sessionCloseRequest)
